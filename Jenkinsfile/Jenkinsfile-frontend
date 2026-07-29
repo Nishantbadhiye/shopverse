@@ -22,7 +22,7 @@ pipeline {
         stage('Checkout from Git') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/Nishantbadhiye/Three-tier-application-MERN-stack-deployment.git'
+                    url: 'https://github.com/Nishantbadhiye/shopverse.git'
             }
         }
 
@@ -106,7 +106,7 @@ pipeline {
                         git add deployment.yaml
                         git commit -m "Update frontend image to ${IMAGE_TAG}" || true
 
-                        git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Nishantbadhiye/Three-tier-application-MERN-stack-deployment.git
+                        git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Nishantbadhiye/shopverse.git
 
                         git push origin main
                         """
