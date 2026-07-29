@@ -1,112 +1,118 @@
-(without K8S Stage)
 pipeline {
     agent any
+
     tools {
-        jdk 'jdk17'
-        nodejs 'node23'
+        jdk 'jdk'
+        nodejs 'nodejs'
     }
+
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+        IMAGE_NAME = "nishantbadhiye07/frontend"
     }
+
     stages {
-        stage('Clean Workspace') {
+
+        stage('Cleaning Workspace') {
             steps {
                 cleanWs()
             }
         }
+
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/KastroVKiran/Book-My-Show.git'
-                sh 'ls -la'  // Verify files after checkout
+                git branch: 'main',
+                    url: 'https://github.com/Nishantbadhiye/Three-tier-application-MERN-stack-deployment.git'
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' 
-                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BMS \
-                    -Dsonar.projectKey=BMS 
-                    '''
-                }
-            }
-        }
-        stage('Quality Gate') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
-                }
-            }
-        }
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                cd bookmyshow-app
-                ls -la  # Verify package.json exists
-                if [ -f package.json ]; then
-                    rm -rf node_modules package-lock.json  # Remove old dependencies
-                    npm install  # Install fresh dependencies
-                else
-                    echo "Error: package.json not found in bookmyshow-app!"
-                    exit 1
-                fi
-                '''
-            }
-        }
-        stage('OWASP FS Scan') {
-            steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-        stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs . > trivyfs.txt'
-            }
-        }
-        stage('Docker Build & Push') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh ''' 
-                        echo "Building Docker image..."
-                        docker build --no-cache -t kastrov/bms:latest -f bookmyshow-app/Dockerfile bookmyshow-app
 
-                        echo "Pushing Docker image to registry..."
-                        docker push kastrov/bms:latest
+        stage('Sonarqube Analysis') {
+            steps {
+                dir('Application-Code/frontend') {
+                    withSonarQubeEnv('sonar-server') {
+                        sh '''
+                        $SCANNER_HOME/bin/sonar-scanner \
+                          -Dsonar.projectName=three-tier-frontend \
+                          -Dsonar.projectKey=three-tier-frontend
                         '''
                     }
                 }
             }
         }
-        stage('Deploy to Container') {
+
+        stage('Trivy File Scan') {
             steps {
-                sh ''' 
-                echo "Stopping and removing old container..."
-                docker stop bms || true
-                docker rm bms || true
-
-                echo "Running new container on port 3000..."
-                docker run -d --restart=always --name bms -p 3000:3000 kastrov/bms:latest
-
-                echo "Checking running containers..."
-                docker ps -a
-
-                echo "Fetching logs..."
-                sleep 5  # Give time for the app to start
-                docker logs bms
-                '''
+                dir('Application-Code/frontend') {
+                    sh '''
+                    trivy fs --format table -o trivyfs.txt .
+                    '''
+                }
             }
         }
-    }
-    post {
-        always {
-            emailext attachLog: true,
-                subject: "'${currentBuild.result}'",
-                body: "Project: ${env.JOB_NAME}<br/>" +
-                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                      "URL: ${env.BUILD_URL}<br/>",
-                to: 'kastrokiran@gmail.com',
-                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+
+        stage('Build and Push Image') {
+            steps {
+                script {
+                    env.IMAGE_TAG = "build-${BUILD_NUMBER}"
+
+                    dir('Application-Code/frontend') {
+                        withCredentials([usernamePassword(
+                            credentialsId: 'docker-cred',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+
+                            sh """
+                            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+
+                            echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                            docker push ${IMAGE_NAME}:latest
+
+                            docker logout
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh """
+                trivy image --format table ${IMAGE_NAME}:${IMAGE_TAG} > trivyimage.txt
+                """
+            }
+        }
+
+        stage('Update Deployment Manifest') {
+            steps {
+                dir('Kubernetes-Manifests-file/Frontend') {
+
+                    withCredentials([usernamePassword(
+                        credentialsId: 'github-cred',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )]) {
+
+                        sh """
+                        git config user.name "Nishantbadhiye"
+                        git config user.email "nishantbadhiye09@gmail.com"
+
+                        sed -i 's|image: .*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' deployment.yaml
+
+                        git add deployment.yaml
+                        git commit -m "Update frontend image to ${IMAGE_TAG}" || true
+
+                        git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Nishantbadhiye/Three-tier-application-MERN-stack-deployment.git
+
+                        git push origin main
+                        """
+                    }
+                }
+            }
         }
     }
 }
