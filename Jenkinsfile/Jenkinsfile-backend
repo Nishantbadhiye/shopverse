@@ -64,6 +64,12 @@ pipeline {
                         )]) {
 
                             sh """
+                              
+                    pwd
+                    git log --oneline -1
+                    git status
+                    ls -l go.mod
+                    ls -l go.sum
                             docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                             docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
 
