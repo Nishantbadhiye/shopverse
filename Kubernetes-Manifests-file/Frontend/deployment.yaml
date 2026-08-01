@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: shopverse-frontend
   namespace: workshop
   labels:
-    role: frontend
-    env: demo
-spec: 
+    role: shopverse-frontend
+
+spec:
   replicas: 1
   strategy:
     type: RollingUpdate
@@ -14,21 +14,17 @@ spec:
       maxSurge: 1
       maxUnavailable: 25%
   selector:
-    matchLabels: 
-      role: frontend
+    matchLabels:
+      role: shopverse-frontend
   template:
     metadata:
       labels:
-        role: frontend
-    spec: 
-      imagePullSecrets:
-      - name: ecr-registry-secret
+        role: shopverse-frontend
+    spec:
       containers:
       - name: frontend
-        image: nishantbadhiye07/frontend:build-19
+        image: nishantbadhiye07/shopverse-frontend:latest
         imagePullPolicy: Always
-        env:
-          - name: REACT_APP_BACKEND_URL
-            value: "http://backend.amanpathakdevops.study/api/tasks"
+
         ports:
-        - containerPort: 3000
+        - containerPort: 80
