@@ -1,57 +1,52 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: 
+
+metadata:
   name: api
   namespace: workshop
-  labels: 
+  labels:
     role: api
     env: demo
-spec: 
-  replicas: 2
-  strategy: 
+
+spec:
+  replicas: 1
+
+  strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 25%
-  selector: 
+
+  selector:
     matchLabels:
       role: api
+
   template:
     metadata:
       labels:
         role: api
+
     spec:
-      imagePullSecrets:
-      - name: ecr-registry-secret
       containers:
       - name: api
-        image: nishantbadhiye07/backend:build-8
+        image: nishantbadhiye07/shopverse-backend:latest
         imagePullPolicy: Always
+
         env:
-          - name: MONGO_CONN_STR
-            value: mongodb://mongodb-svc:27017/todo?directConnection=true
-          - name: MONGO_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: mongo-sec
-                key: username
-          - name: MONGO_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: mongo-sec
-                key: password
+        - name: DB_HOST
+          value: mysql
+
+        - name: DB_PORT
+          value: "3306"
+
+        - name: DB_USER
+          value: shopverse
+
+        - name: DB_PASSWORD
+          value: shopverse123
+
+        - name: DB_NAME
+          value: shopverse
+
         ports:
-        - containerPort: 3500
-        livenessProbe: 
-          httpGet:
-            path: /ok
-            port: 3500
-          initialDelaySeconds: 2
-          periodSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /ok
-            port: 3500
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
+        - containerPort: 8080
