@@ -29,11 +29,11 @@ pipeline {
             steps {
                 dir('backend') {
                     withSonarQubeEnv('sonar-server') {
-                        sh '''
-                        $SCANNER_HOME/bin/sonar-scanner \
-                          -Dsonar.projectName=shopverse-backend \
-                          -Dsonar.projectKey=shopverse-backend
-                        '''
+                        sh """
+                        ${SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectName=shopverse-backend \
+                        -Dsonar.projectKey=shopverse-backend
+                        """
                     }
                 }
             }
@@ -52,9 +52,11 @@ pipeline {
         stage('Build and Push Image') {
             steps {
                 script {
+
                     env.IMAGE_TAG = "build-${BUILD_NUMBER}"
 
                     dir('backend') {
+
                         withCredentials([usernamePassword(
                             credentialsId: 'docker-cred',
                             usernameVariable: 'DOCKER_USER',
@@ -81,7 +83,7 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
                 sh """
-                trivy image --format table ${IMAGE_NAME}:${IMAGE_TAG} > trivyimage.txt
+                trivy image --format table -o trivyimage.txt ${IMAGE_NAME}:${IMAGE_TAG}
                 """
             }
         }
@@ -114,3 +116,4 @@ pipeline {
             }
         }
     }
+}
