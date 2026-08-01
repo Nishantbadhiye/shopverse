@@ -66,21 +66,6 @@ pipeline {
                             sh """
                             pwd
 
-                            echo "===== Go Version ====="
-                            go version
-
-                            echo "===== Fiber entries in go.sum ====="
-                            grep "github.com/gofiber/fiber/v2" go.sum
-
-                            echo "===== Crypto entries in go.sum ====="
-                            grep "golang.org/x/crypto" go.sum
-
-                            echo "===== Verifying modules ====="
-                            go mod verify
-
-                            echo "===== Running go mod tidy ====="
-                            go mod tidy
-
                             echo "===== Building Docker Image ====="
                             docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
 
