@@ -6,70 +6,6 @@ A production-ready 3-tier e-commerce web application built with React, Go (Fiber
 
 <img width="1280" height="720" alt="Shopverse project - Thumbnail" src="https://github.com/user-attachments/assets/fd0a3efe-aeb3-48dc-8912-714517580010" />
 
-
-## YouTube Video Link:
-
-```
-https://youtu.be/XQrJrf6pUvk?si=XGsLPOm6YC1AEJFk
-```
-
-## Architecture:
-
-```
-                         +------------------+
-                         |   AWS ALB        |
-                         | (Ingress Controller) |
-                         +--------+---------+
-                                  |
-                    +-------------+-------------+
-                    |                           |
-              /api/* routes               /* routes
-                    |                           |
-           +--------v---------+     +-----------v----------+
-           | Backend Service  |     | Frontend Service     |
-           | (Go + Fiber)     |     | (React + Nginx)      |
-           | Port 8080        |     | Port 80              |
-           | NodePort: 30081  |     | NodePort: 30080      |
-           | 2 replicas       |     | 2 replicas           |
-           +--------+---------+     +----------------------+
-                    |
-           +--------v---------+
-           | MySQL StatefulSet|
-           | Port 3306        |
-           | 5Gi PVC (gp2)   |
-           +------------------+
-```
-
-## Tech Stack
-
-| Layer    | Technology                     |
-|----------|--------------------------------|
-| Frontend | React 18, TailwindCSS, Vite    |
-| Backend  | Go 1.21, Fiber, GORM, JWT      |
-| Database | MySQL 8.0 (StatefulSet)        |
-| Infra    | AWS EKS, ECR, ALB, Terraform   |
-| CI/CD    | GitHub Actions, Helm, Trivy    |
-| IaC      | Terraform Modules (VPC, EKS, EC2) |
-
-## API Endpoints
-
-| Method | Endpoint            | Auth     | Description             |
-|--------|---------------------|----------|-------------------------|
-| POST   | /api/auth/register  | No       | Register new user       |
-| POST   | /api/auth/login     | No       | Login, returns JWT      |
-| GET    | /api/products       | No       | List products           |
-| GET    | /api/products/:id   | No       | Get single product      |
-| POST   | /api/products       | JWT      | Create product (admin)  |
-| GET    | /api/cart           | JWT      | Get user's cart         |
-| POST   | /api/cart           | JWT      | Add item to cart        |
-| PUT    | /api/cart/:id       | JWT      | Update cart item qty    |
-| DELETE | /api/cart/:id       | JWT      | Remove cart item        |
-| GET    | /api/orders         | JWT      | Get user's orders       |
-| POST   | /api/orders         | JWT      | Place order from cart   |
-| GET    | /health             | No       | Health check            |
-
----
-
 ## Local Development
 
 ### Prerequisites
@@ -109,112 +45,9 @@ DB_HOST=localhost DB_USER=shopverse DB_PASSWORD=shopverse123 DB_NAME=shopverse g
 ```
 
 ---
-
-## AWS Deployment (Step-by-Step from Local)
-
-### Prerequisites
-
-Install the following tools on your local machine:
-
-| Tool       | Version  | Download |
-|------------|----------|----------|
-| Terraform  | >= 1.5.0 | https://developer.hashicorp.com/terraform/downloads |
-| AWS CLI v2 | Latest   | https://aws.amazon.com/cli/ |
-| kubectl    | Latest   | https://kubernetes.io/docs/tasks/tools/ |
-| Helm 3     | Latest   | https://helm.sh/docs/intro/install/ |
-| Docker     | Latest   | https://docs.docker.com/get-docker/ |
-
 ---
 
-### Step 1: Configure AWS CLI
-
-```bash
-aws configure
-# AWS Access Key ID: <your-access-key>
-# AWS Secret Access Key: <your-secret-key>
-# Default region name: us-east-1
-# Default output format: json
-
-# Verify your identity
-aws sts get-caller-identity
-```
-
----
-
-### Step 2: Create AWS Infrastructure using Terraform
-
-Terraform modules will create: VPC, EKS Cluster, Node Group, IAM Roles, Jump Server (EC2).
-
-See [terraform/README.md](terraform/README.md) for detailed Terraform instructions.
-
-```bash
-cd terraform
-
-# Create S3 bucket for Terraform state (one-time setup)
-aws s3api create-bucket \
-  --bucket shopverse-terraform-state \
-  --region us-east-1
-
-aws s3api put-bucket-versioning \
-  --bucket shopverse-terraform-state \
-  --versioning-configuration Status=Enabled
-
-# Copy and edit variables
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your values (cluster name, region, instance types, etc.)
-
-# Initialize Terraform
-terraform init
-
-# Preview what will be created
-terraform plan
-
-# Create the infrastructure (~15-20 minutes)
-terraform apply
-# Type 'yes' when prompted
-```
-
-After apply completes, note the outputs:
-```bash
-terraform output
-```
-
----
-
-### Step 3: Connect to the EKS Cluster
-
-```bash
-# Update your local kubeconfig (use cluster name from terraform output)
-aws eks update-kubeconfig --name shopverse-cluster --region us-east-1
-
-# Verify connection - you should see your worker nodes
-kubectl get nodes
-kubectl cluster-info
-```
-
----
-
-### Step 4: Create ECR Repositories
-
-Create 3 ECR repositories for frontend, backend, and Helm chart:
-
-```bash
-# Get your AWS Account ID
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
-
-# Create repositories
-aws ecr create-repository --repository-name shopverse-frontend --region $REGION
-aws ecr create-repository --repository-name shopverse-backend --region $REGION
-aws ecr create-repository --repository-name shopverse-helmchart --region $REGION
-
-# Verify repositories were created
-aws ecr describe-repositories --region $REGION --query 'repositories[].repositoryName'
-```
-
----
-
-### Step 5: Build Docker Images
+### Step : Build Docker Images
 
 ```bash
 # Navigate to project root
@@ -232,14 +65,8 @@ docker images | grep shopverse
 
 ---
 
-### Step 6: Tag Docker Images
+### Step : Tag Docker Images
 
-Tag the images with the ECR repository URI:
-
-```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
-ECR_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
 # Tag frontend image
 docker tag shopverse-frontend:v1 ${ECR_URI}/shopverse-frontend:v1
@@ -247,18 +74,9 @@ docker tag shopverse-frontend:v1 ${ECR_URI}/shopverse-frontend:v1
 # Tag backend image
 docker tag shopverse-backend:v1 ${ECR_URI}/shopverse-backend:v1
 
-# Verify tags
-docker images | grep ${ACCOUNT_ID}
-```
-
----
 
 ### Step 7: Push Docker Images to ECR
 
-```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
-ECR_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
 # Login to ECR
 aws ecr get-login-password --region $REGION | \
@@ -274,31 +92,6 @@ docker push ${ECR_URI}/shopverse-backend:v1
 aws ecr list-images --repository-name shopverse-frontend --region $REGION
 aws ecr list-images --repository-name shopverse-backend --region $REGION
 ```
-
----
-
-### Step 8: Push Helm Chart to ECR (Optional)
-
-```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
-ECR_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
-
-# Login to ECR for Helm
-aws ecr get-login-password --region $REGION | \
-  helm registry login --username AWS --password-stdin ${ECR_URI}
-
-# Package the Helm chart
-helm package ./helm/shopverse
-
-# Push Helm chart to ECR
-helm push shopverse-1.0.0.tgz oci://${ECR_URI}/shopverse-helmchart
-
-# Verify
-aws ecr list-images --repository-name shopverse-helmchart --region $REGION
-```
-
----
 
 ### Step 9: Install EKS Add-ons
 
@@ -318,40 +111,7 @@ eksctl create iamserviceaccount \
 
 aws eks create-addon --cluster-name shopverse-cluster --addon-name aws-ebs-csi-driver --region us-east-1
 
-# Install AWS Load Balancer Controller (required for ALB Ingress)
-ALB_ROLE_ARN=$(cd terraform && terraform output -raw alb_controller_role_arn)
 
-helm repo add eks https://aws.github.io/eks-charts
-helm repo update
-helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-  -n kube-system \
-  --set clusterName=shopverse-cluster \
-  --set serviceAccount.create=true \
-  --set serviceAccount.name=aws-load-balancer-controller \
-  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$ALB_ROLE_ARN
-```
-
----
-
-### Step 10: Deploy Application using Helm
-
-```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
-ECR_URI=${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
-
-helm upgrade --install shopverse ./helm/shopverse \
-  --set frontend.image=${ECR_URI}/shopverse-frontend:v1 \
-  --set backend.image=${ECR_URI}/shopverse-backend:v1 \
-  --set mysql.rootPassword=YourRootPassword123 \
-  --set mysql.password=YourAppPassword123 \
-  --set jwtSecret=YourJwtSecretKey123 \
-  --namespace shopverse \
-  --create-namespace \
-  --wait --timeout 600s
-```
-
----
 
 ### Step 11: Verify Deployment
 
@@ -401,16 +161,6 @@ kubectl get ingress -n shopverse
 
 ---
 
-## Connect to Jump Server
-
-If you created a jump server via Terraform (`create_jump_server = true`):
-
-1. Go to **AWS Console** > **EC2** > **Instances**
-2. Select the jump server instance
-3. Click **Connect** > Choose **EC2 Instance Connect** > Click **Connect**
-
-The jump server comes pre-installed with: AWS CLI, kubectl, Helm, Docker, Git.
-
 ```bash
 # Once connected, verify tools
 kubectl get nodes
@@ -421,40 +171,6 @@ docker --version
 kubectl get pods -n shopverse
 kubectl get svc -n shopverse
 ```
-
----
-
-## Querying the Database
-
-### Understanding the Database
-
-ShopVerse uses MySQL 8.0 running as a Kubernetes StatefulSet. The database contains these tables:
-
-| Table | Description |
-|-------|-------------|
-| `users` | Registered users (name, email, hashed password) |
-| `products` | Product catalog - 28 products across 6 categories |
-| `orders` | Customer orders (total amount, status, timestamps) |
-| `order_items` | Individual items within each order (product, quantity, price) |
-| `cart_items` | Current shopping cart contents per user |
-
-### Step 1: Get the Database Password
-
-The MySQL password is stored as a Kubernetes secret (base64 encoded):
-
-```bash
-# Decode the database password from the Kubernetes secret
-DB_PASSWORD=$(kubectl get secret -n shopverse shopverse-secret \
-  -o jsonpath='{.data.DB_PASSWORD}' | base64 -d)
-
-# Verify you got the password (optional)
-echo $DB_PASSWORD
-```
-
-**How this works:**
-- `kubectl get secret` fetches the Kubernetes secret object
-- `-o jsonpath='{.data.DB_PASSWORD}'` extracts just the password field
-- `| base64 -d` decodes it from base64 (Kubernetes stores secrets in base64)
 
 ### Step 2: Connect to MySQL Shell
 
