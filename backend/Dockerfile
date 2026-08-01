@@ -8,14 +8,6 @@ RUN go mod download
 
 COPY . .
 
-RUN ls -l
-
-RUN ls -l go.mod go.sum
-RUN grep "github.com/gofiber/fiber/v2" go.sum
-RUN grep "golang.org/x/crypto" go.sum
-
-
-
 RUN CGO_ENABLED=0 GOOS=linux go build -o shopverse-api ./cmd/main.go
 
 FROM gcr.io/distroless/static-debian12
