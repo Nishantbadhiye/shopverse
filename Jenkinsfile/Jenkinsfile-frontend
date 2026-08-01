@@ -2,13 +2,12 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk'
         nodejs 'nodejs'
     }
 
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        IMAGE_NAME = "nishantbadhiye07/frontend"
+        IMAGE_NAME = "nishantbadhiye07/shopverse-frontend"
     }
 
     stages {
@@ -28,12 +27,12 @@ pipeline {
 
         stage('Sonarqube Analysis') {
             steps {
-                dir('Application-Code/frontend') {
+                dir('frontend') {
                     withSonarQubeEnv('sonar-server') {
                         sh '''
                         $SCANNER_HOME/bin/sonar-scanner \
-                          -Dsonar.projectName=three-tier-frontend \
-                          -Dsonar.projectKey=three-tier-frontend
+                          -Dsonar.projectName=shopverse-frontend \
+                          -Dsonar.projectKey=shopverse-frontend
                         '''
                     }
                 }
@@ -42,7 +41,7 @@ pipeline {
 
         stage('Trivy File Scan') {
             steps {
-                dir('Application-Code/frontend') {
+                dir('frontend') {
                     sh '''
                     trivy fs --format table -o trivyfs.txt .
                     '''
@@ -55,7 +54,7 @@ pipeline {
                 script {
                     env.IMAGE_TAG = "build-${BUILD_NUMBER}"
 
-                    dir('Application-Code/frontend') {
+                    dir('frontend') {
                         withCredentials([usernamePassword(
                             credentialsId: 'docker-cred',
                             usernameVariable: 'DOCKER_USER',
