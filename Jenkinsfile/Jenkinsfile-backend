@@ -31,8 +31,8 @@ pipeline {
                     withSonarQubeEnv('sonar-server') {
                         sh """
                         ${SCANNER_HOME}/bin/sonar-scanner \
-                        -Dsonar.projectName=shopverse-backend \
-                        -Dsonar.projectKey=shopverse-backend
+                          -Dsonar.projectName=shopverse-backend \
+                          -Dsonar.projectKey=shopverse-backend
                         """
                     }
                 }
@@ -64,13 +64,26 @@ pipeline {
                         )]) {
 
                             sh """
-                              
-                    pwd
-                    git log --oneline -1
-                    git status
-                    ls -l go.mod
-                    ls -l go.sum
+                            pwd
+
+                            echo "===== Go Version ====="
+                            go version
+
+                            echo "===== Fiber entries in go.sum ====="
+                            grep "github.com/gofiber/fiber/v2" go.sum
+
+                            echo "===== Crypto entries in go.sum ====="
+                            grep "golang.org/x/crypto" go.sum
+
+                            echo "===== Verifying modules ====="
+                            go mod verify
+
+                            echo "===== Running go mod tidy ====="
+                            go mod tidy
+
+                            echo "===== Building Docker Image ====="
                             docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+
                             docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
 
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
