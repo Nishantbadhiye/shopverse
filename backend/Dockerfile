@@ -6,7 +6,9 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY . .RUN ls -l
+COPY . .
+
+RUN ls -l
 
 RUN ls -l go.mod go.sum
 RUN grep "github.com/gofiber/fiber/v2" go.sum
