@@ -1,9 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
-  namespace: workshop
   name: mysql
+  namespace: workshop
 
 spec:
   replicas: 1
@@ -19,29 +18,39 @@ spec:
 
     spec:
       containers:
-      - name: mysql
-        image: mysql:8.0
+        - name: mysql
+          image: mysql:8.0
 
-        ports:
-        - containerPort: 3306
+          ports:
+            - containerPort: 3306
 
-        env:
-        - name: MYSQL_DATABASE
-          value: shopverse
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-sec
+                  key: password
 
-        - name: MYSQL_USER
-          value: shopverse
+            - name: MYSQL_DATABASE
+              value: shopverse
 
-        - name: MYSQL_PASSWORD
-          value: shopverse123
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-sec
+                  key: username
 
-        - name: MYSQL_ROOT_PASSWORD
-          value: root123
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-sec
+                  key: password
 
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
+          volumeMounts:
+            - name: mysql-volume
+              mountPath: /var/lib/mysql
 
       volumes:
-      - name: mysql-data
-        emptyDir: {}
+        - name: mysql-volume
+          persistentVolumeClaim:
+            claimName: mysql-volume-claim
