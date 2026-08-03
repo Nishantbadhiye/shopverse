@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: nishantbadhiye07/shopverse-backend:build-16
+        image: nishantbadhiye07/shopverse-backend:build-18
         imagePullPolicy: Always
 
         env:
