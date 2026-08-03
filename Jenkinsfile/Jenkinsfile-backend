@@ -121,3 +121,24 @@ pipeline {
         }
     }
 }
+post {
+        always {
+            emailext(
+                to: 'nishantbadhiye09@gmail.com',
+                subject: "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+Build Status : ${currentBuild.currentResult}
+
+Job Name     : ${env.JOB_NAME}
+Build Number : ${env.BUILD_NUMBER}
+
+Build URL:
+${env.BUILD_URL}
+
+Regards,
+Jenkins
+"""
+            )
+        }
+    }
+}
