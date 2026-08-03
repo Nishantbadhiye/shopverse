@@ -122,23 +122,28 @@ pipeline {
     }
 
     post {
-        always {
-            emailext(
-                to: 'nishantbadhiye09@gmail.com',
-                subject: "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+    always {
+        script {
+            def buildStatus = currentBuild.currentResult
+            def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Github User'
+            
+            emailext (
+                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-Build Status : ${currentBuild.currentResult}
-
-Job Name     : ${env.JOB_NAME}
-Build Number : ${env.BUILD_NUMBER}
-
-Build URL:
-${env.BUILD_URL}
-
-Regards,
-Jenkins
-"""
+                    <p>This is a Jenkins shopverse CICD pipeline status.</p>
+                    <p>Project: ${env.JOB_NAME}</p>
+                    <p>Build Number: ${env.BUILD_NUMBER}</p>
+                    <p>Build Status: ${buildStatus}</p>
+                    <p>Started by: ${buildUser}</p>
+                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                """,
+                to: 'nishantbadhiye07@gmail.com',
+                from: 'nishantbadhiye07@gmail.com',
+                replyTo: 'nishantbadhiye07@gmail.com',
+                mimeType: 'text/html',
+                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
             )
-        }
+           }
+       }
+
     }
-}
