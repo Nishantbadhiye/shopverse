@@ -121,29 +121,35 @@ pipeline {
         }
     }
 
-    post {
-    always {
-        script {
-            def buildStatus = currentBuild.currentResult
-            def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Github User'
-            
-            emailext (
-                subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <p>This is a Jenkins shopverse CICD pipeline status.</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build Number: ${env.BUILD_NUMBER}</p>
-                    <p>Build Status: ${buildStatus}</p>
-                    <p>Started by: ${buildUser}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                """,
-                to: 'nishantbadhiye07@gmail.com',
-                from: 'nishantbadhiye07@gmail.com',
-                replyTo: 'nishantbadhiye07@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
-            )
-           }
-       }
+        post {
+        always {
+            emailext(
+                subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
 
+                body: """
+Hello,
+
+The Jenkins CI/CD pipeline has completed.
+
+==========================================
+Job Name      : ${env.JOB_NAME}
+Build Number  : ${env.BUILD_NUMBER}
+Build Status  : ${currentBuild.currentResult}
+Build URL     : ${env.BUILD_URL}
+==========================================
+
+The following reports are attached:
+- Trivy File System Scan Report
+- Trivy Docker Image Scan Report
+
+Regards,
+Jenkins CI/CD Pipeline
+""",
+
+                to: 'nishantbadhiye07@gmail.com',
+                mimeType: 'text/plain',
+                attachmentsPattern: 'backend/trivyfs.txt,trivyimage.txt'
+            )
+        }
     }
+}
