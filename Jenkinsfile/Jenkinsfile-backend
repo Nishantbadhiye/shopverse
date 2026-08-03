@@ -120,8 +120,8 @@ pipeline {
             }
         }
     }
-}
-post {
+
+    post {
         always {
             emailext(
                 to: 'nishantbadhiye09@gmail.com',
