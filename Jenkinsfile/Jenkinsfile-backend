@@ -116,7 +116,7 @@ pipeline {
             }
         }
     }
-     post {
+post {
     always {
         emailext(
             subject: "Pipeline Status: ${currentBuild.currentResult}",
