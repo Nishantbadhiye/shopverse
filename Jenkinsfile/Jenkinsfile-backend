@@ -108,7 +108,7 @@ pipeline {
                         git commit -m "Update backend image to ${IMAGE_TAG}" || true
 
                         git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Nishantbadhiye/shopverse.git
-
+                        git pull --rebase origin main
                         git push origin main
                         """
                     }
