@@ -14,7 +14,7 @@ FROM gcr.io/distroless/static-debian12
 
 COPY --from=builder /app/shopverse-api /shopverse-api
 
-EXPOSE 8080
+EXPOSE 9091
 
 USER nonroot:nonroot
 
