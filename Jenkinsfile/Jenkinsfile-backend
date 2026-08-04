@@ -120,36 +120,37 @@ pipeline {
             }
         }
     }
+     post {
+    always {
+        emailext(
+            subject: "Pipeline Status: ${currentBuild.currentResult}",
+            body: """
+<html>
+    <body>
+        <h2>Jenkins Pipeline Notification</h2>
 
-        post {
-        always {
-            emailext(
-                subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        <p><b>Build Status:</b> ${currentBuild.currentResult}</p>
+        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+        <p><b>Job Name:</b> ${env.JOB_NAME}</p>
 
-                body: """
-Hello,
+        <p>
+            Check the
+            <a href="${env.BUILD_URL}">Build Console Output</a>.
+        </p>
 
-The Jenkins CI/CD pipeline has completed.
+        <br>
 
-==========================================
-Job Name      : ${env.JOB_NAME}
-Build Number  : ${env.BUILD_NUMBER}
-Build Status  : ${currentBuild.currentResult}
-Build URL     : ${env.BUILD_URL}
-==========================================
-
-The following reports are attached:
-- Trivy File System Scan Report
-- Trivy Docker Image Scan Report
-
-Regards,
-Jenkins CI/CD Pipeline
+        <p>Regards,<br>Jenkins CI/CD</p>
+    </body>
+</html>
 """,
-
-                to: 'nishantbadhiye07@gmail.com',
-                mimeType: 'text/plain',
-                attachmentsPattern: 'backend/trivyfs.txt,trivyimage.txt'
-            )
-        }
+            to: "nishantbadhiye07@gmail.com",
+            from: "jenkins@example.com",
+            replyTo: "nishantbadhiye07@gmail.com",
+            mimeType: "text/html" ,
+            attachmentsPattern: "backend/trivyfs.txt,trivyimage.txt"
+        )
     }
 }
+
+        
