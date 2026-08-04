@@ -49,4 +49,4 @@ spec:
           value: shopverse
 
         ports:
-        - containerPort: 9090
+        - containerPort: 9091
