@@ -39,7 +39,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
-                    trivy fs --format table -o trivyfs.txt . | tee trivyfs.txt
+                    trivy fs --format table . | tee trivyfs.txt
                     '''
                 }
             }
@@ -83,7 +83,7 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
                 sh """
-                trivy image --format table -o trivyimage.txt ${IMAGE_NAME}:${IMAGE_TAG}
+                trivy image ${IMAGE_NAME}:${IMAGE_TAG} | tee trivyimage.txt
                 """
             }
         }
@@ -116,37 +116,26 @@ pipeline {
             }
         }
     }
-post {
-    always {
-        mail(
-            subject: "Pipeline Status: ${currentBuild.currentResult}",
-            body: """
-<html>
-    <body>
-        <h2>Jenkins Pipeline Notification</h2>
 
-        <p><b>Build Status:</b> ${currentBuild.currentResult}</p>
-        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-        <p><b>Job Name:</b> ${env.JOB_NAME}</p>
+    post {
+        always {
+            mail(
+                to: "nishantbadhiye07@gmail.com",
+                subject: "Pipeline Status: ${currentBuild.currentResult}",
+                body: """
+Jenkins Pipeline Notification
 
-        <p>
-            Check the
-            <a href="${env.BUILD_URL}">Build Console Output</a>.
-        </p>
+Build Status : ${currentBuild.currentResult}
+Build Number : ${env.BUILD_NUMBER}
+Job Name     : ${env.JOB_NAME}
 
-        <br>
+Build URL:
+${env.BUILD_URL}
 
-        <p>Regards,<br>Jenkins CI/CD</p>
-    </body>
-</html>
-""",
-            to: "nishantbadhiye07@gmail.com",
-        
-                
-                mimeType: "text/html",
-                attachmentsPattern: "backend/trivyfs.txt,trivyimage.txt"
+Regards,
+Jenkins CI/CD
+"""
             )
         }
     }
 }
-        
