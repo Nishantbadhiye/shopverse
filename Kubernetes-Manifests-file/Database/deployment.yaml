@@ -26,25 +26,16 @@ spec:
 
           env:
             - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-sec
-                  key: password
+              value: root123
 
             - name: MYSQL_DATABASE
               value: shopverse
 
             - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-sec
-                  key: username
+              value: root
 
             - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-sec
-                  key: password
+              value: root123
 
           volumeMounts:
             - name: mysql-volume
