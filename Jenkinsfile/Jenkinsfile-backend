@@ -39,7 +39,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
-                    trivy fs --format table -o trivyfs.txt .
+                    trivy fs --format table -o trivyfs.txt . | tee trivyfs.txt
                     '''
                 }
             }
