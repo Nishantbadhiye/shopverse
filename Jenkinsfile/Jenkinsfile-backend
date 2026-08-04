@@ -142,7 +142,7 @@ pipeline {
 """,
             to: "nishantbadhiye07@gmail.com",
         
-                replyTo: "nishantbadhiye07@gmail.com",
+                
                 mimeType: "text/html",
                 attachmentsPattern: "backend/trivyfs.txt,trivyimage.txt"
             )
