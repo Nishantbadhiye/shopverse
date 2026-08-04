@@ -141,12 +141,12 @@ pipeline {
 </html>
 """,
             to: "nishantbadhiye07@gmail.com",
-            from: "jenkins@example.com",
-            replyTo: "nishantbadhiye07@gmail.com",
-            mimeType: "text/html" ,
-            attachmentsPattern: "backend/trivyfs.txt,trivyimage.txt"
-        )
+                from: "jenkins@example.com",
+                replyTo: "nishantbadhiye07@gmail.com",
+                mimeType: "text/html",
+                attachmentsPattern: "backend/trivyfs.txt,trivyimage.txt"
+            )
+        }
     }
 }
-
         
