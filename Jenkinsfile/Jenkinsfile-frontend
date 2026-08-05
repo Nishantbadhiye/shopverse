@@ -112,19 +112,27 @@ pipeline {
     }
     post {
         always {
-            emailext(
-                subject: "${currentBuild.currentResult}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            mail(
+                to: "nishantbadhiye07@gmail.com",
+                subject: "Pipeline Status: ${currentBuild.currentResult}",
                 body: """
-Build Status : ${currentBuild.currentResult}
+Jenkins Pipeline Notification
 
-Job Name     : ${env.JOB_NAME}
+Build Status : ${currentBuild.currentResult}
 Build Number : ${env.BUILD_NUMBER}
+Job Name     : ${env.JOB_NAME}
 
 Build URL:
 ${env.BUILD_URL}
-""",
-                to: "nishantbadhiye09@gmail.com"
+
+Regards,
+Jenkins CI/CD
+"""
             )
         }
     }
 }
+
+
+
+
