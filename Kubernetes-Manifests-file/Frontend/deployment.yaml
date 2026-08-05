@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: nishantbadhiye07/shopverse-frontend:build-7
+        image: nishantbadhiye07/shopverse-frontend:build-8
         imagePullPolicy: Always
 
         ports:
